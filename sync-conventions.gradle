@@ -1,0 +1,42 @@
+// android-conventions :: sync-conventions.gradle
+// Descarga archivos de convenciones que NO pueden incluirse vía apply from
+// (.editorconfig, lint.xml, detekt.yml, etc.) al repo consumidor.
+//
+// USO: ./gradlew syncConventions
+//   - Lee la versión desde rootProject.ext.conventionsVersion
+//   - Descarga los archivos al working tree
+//   - El dev commitea los cambios resultantes
+
+def conventionsBaseUrl = "https://raw.githubusercontent.com/juancamach/android-conventions/${rootProject.ext.conventionsVersion}"
+
+// Archivos a sincronizar: 'ruta destino relativa al root' -> 'URL fuente'
+def conventionsFiles = [
+    '.editorconfig': "${conventionsBaseUrl}/.editorconfig",
+    // Futuro:
+    // 'config/lint.xml'  : "${conventionsBaseUrl}/lint.xml",
+    // 'config/detekt.yml': "${conventionsBaseUrl}/detekt.yml",
+]
+
+tasks.register('syncConventions') {
+    description = "Descarga los archivos de convenciones desde android-conventions (version: \${rootProject.ext.conventionsVersion})."
+    group = 'conventions'
+
+    doLast {
+        println "[syncConventions] Versión: ${rootProject.ext.conventionsVersion}"
+        conventionsFiles.each { destPath, url ->
+            def dest = rootProject.file(destPath)
+            dest.parentFile?.mkdirs()
+            try {
+                new URL(url).withInputStream { input ->
+                    dest.withOutputStream { output ->
+                        output << input
+                    }
+                }
+                println "[syncConventions] ✓ ${destPath}"
+            } catch (Exception e) {
+                throw new GradleException("[syncConventions] Falló al descargar ${url}: ${e.message}")
+            }
+        }
+        println "[syncConventions] Listo. Revisa los cambios con 'git status' y commitéalos."
+    }
+}
