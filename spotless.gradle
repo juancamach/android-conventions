@@ -1,0 +1,50 @@
+// android-conventions :: spotless.gradle
+// Aplica Spotless + ktlint con las convenciones del equipo Android SXA.
+//
+// REQUISITOS DEL CONSUMIDOR:
+//   1. Tener en buildscript.dependencies:
+//        classpath 'com.diffplug.spotless:spotless-plugin-gradle:6.25.0'
+//   2. Aplicar este archivo después del bloque buildscript:
+//        apply from: "https://raw.githubusercontent.com/juancamach/android-conventions/${conventionsVersion}/spotless.gradle"
+//   3. Tener .editorconfig en la raíz (descárgalo con `./gradlew syncConventions`).
+
+allprojects {
+    apply plugin: 'com.diffplug.spotless'
+
+    spotless {
+        kotlin {
+            target '**/*.kt'
+            targetExclude '**/build/**', '**/generated/**'
+            ktlint('0.50.0').editorConfigOverride([
+                'ktlint_standard_no-wildcard-imports'        : 'enabled',
+                'ktlint_standard_max-line-length'            : 'disabled',
+                'ktlint_standard_function-naming'            : 'disabled',
+                'ktlint_standard_filename'                   : 'disabled',
+                'ktlint_standard_package-name'               : 'disabled',
+                'ij_kotlin_imports_layout'                   : '*,java.**,javax.**,kotlin.**,^',
+                'ij_kotlin_allow_trailing_comma'             : 'true',
+                'ij_kotlin_allow_trailing_comma_on_call_site': 'true',
+            ])
+            trimTrailingWhitespace()
+            endWithNewline()
+        }
+        kotlinGradle {
+            target '**/*.gradle.kts'
+            ktlint('0.50.0')
+            trimTrailingWhitespace()
+            endWithNewline()
+        }
+        format 'xml', {
+            target '**/src/**/*.xml'
+            targetExclude '**/build/**'
+            trimTrailingWhitespace()
+            endWithNewline()
+        }
+        format 'misc', {
+            target '**/*.md', '**/.gitignore'
+            targetExclude '**/build/**', '.github/**'
+            trimTrailingWhitespace()
+            endWithNewline()
+        }
+    }
+}
